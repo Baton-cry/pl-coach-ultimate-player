@@ -13,18 +13,63 @@ export function Progress({ auth }:{ auth:any }){
   const [year,setYear]=useState(new Date().getFullYear())
   const [month,setMonth]=useState(new Date().getMonth()+1)
 
-  useEffect(()=>{
-    (async()=>{
-      setS(await auth.getSettings())
-      const ci=await getCheckInsAll()
-      const ww=ci.map(x=>x.weightMorningKg).filter((x:any)=>typeof x==='number')
-      setW(ww.slice(-30))
-      const ts=await getTopSetsAll()
-      const last=ts.slice().sort((a,b)=>a.dateISO<b.dateISO?1:-1).slice(0,120).reverse()
-      const series=(lift:string)=> last.filter(t=>t.lift===lift).map(t=>t.e1rm).slice(-30)
-      setB(series('bench')); setSq(series('squat')); setDl(series('deadlift'))
-    })()
-  },[])
+  useEffect(() => {
+  let alive = true
+
+  ;(async () => {
+    try {
+      if (!auth) return
+
+      const settings = await auth.getSettings()
+
+      const ciRaw = await getCheckInsAll()
+      const tsRaw = await getTopSetsAll()
+
+      if (!alive) return
+
+      setS(settings ?? null)
+
+      const ci = Array.isArray(ciRaw) ? ciRaw : []
+      const ts = Array.isArray(tsRaw) ? tsRaw : []
+
+      const weights = ci
+        .map((x: any) => x?.weightMorningKg)
+        .filter((x: any) => typeof x === "number" && Number.isFinite(x))
+
+      setW(weights.slice(-30))
+
+      const last = ts
+        .slice()
+        .filter((t: any) => t && typeof t === "object")
+        .sort((a: any, b: any) => (a?.dateISO < b?.dateISO ? 1 : -1))
+        .slice(0, 120)
+        .reverse()
+
+      const series = (lift: string) =>
+        last
+          .filter((t: any) => t?.lift === lift)
+          .map((t: any) => Number(t?.e1rm))
+          .filter((n: any) => Number.isFinite(n))
+          .slice(-30)
+
+      setB(series("bench"))
+      setSq(series("squat"))
+      setDl(series("deadlift"))
+    } catch (e: any) {
+      console.error(e)
+      if (!alive) return
+      setS(null)
+      setW([])
+      setB([])
+      setSq([])
+      setDl([])
+    }
+  })()
+
+  return () => {
+    alive = false
+  }
+}, [auth])
 
   const today=isoToday()
 
@@ -49,11 +94,19 @@ export function Progress({ auth }:{ auth:any }){
     return { cells }
   },[s,year,month])
 
+  const tabItems = [
+  { value: "Графики", label: "Графики" },
+  { value: "Календарь", label: "Календарь" },
+]
   return (
     <Container>
       <Topbar title="Прогресс" subtitle="Графики силы + календарь (реальные дни тренировок учитываются)" right={<Pill tone="mut">30 точек</Pill>} />
       <div className="mt-3">
-        <TopTabs tabs={['Графики','Календарь']} active={tab} onChange={(v)=>setTab(v as any)} />
+        <TopTabs
+  items={tabItems}
+  value={tab}
+  onChange={(v: string) => setTab(v as any)}
+/>
       </div>
 
       <div className="mt-4 space-y-3">

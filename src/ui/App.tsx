@@ -9,9 +9,16 @@ import { Game } from './pages/Game'
 import  Player  from './pages/Player'
 
 export function App({ auth }:{ auth:any }){
-  const tabs = ['Сегодня','Плеер','Прогресс','Ранги','Каталог','Настройки','Бэкап']
   const [active,setActive]=useState<string>('Сегодня')
-
+const tabItems = [
+  { value: 'Сегодня', label: 'Сегодня' },
+  { value: 'Плеер', label: 'Плеер' },
+  { value: 'Прогресс', label: 'Прогресс' },
+  { value: 'Ранги', label: 'Ранги' },
+  { value: 'Каталог', label: 'Каталог' },
+  { value: 'Настройки', label: 'Настройки' },
+  { value: 'Бэкап', label: 'Бэкап' },
+]
   const page = useMemo(()=>{
     if(active==='Сегодня') return <Today auth={auth}/>
     if(active==='Плеер') return <Player auth={auth}/>
@@ -25,7 +32,7 @@ export function App({ auth }:{ auth:any }){
   return (
     <div className="fadeIn">
       <div className="max-w-md mx-auto px-4 pt-4">
-        <TopTabs tabs={tabs} active={active} onChange={setActive}/>
+        <TopTabs items={tabItems} value={active} onChange={setActive}/>
       </div>
       {page}
     </div>

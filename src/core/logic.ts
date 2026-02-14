@@ -79,7 +79,7 @@ export function trainingMaxForLift(s: Settings, all: TopSet[], lift: Lift){
   const tm=round2p5(e*(s.tmFactor||0.95))
   return { tm: Math.min(tm, base+2.5), source:'e1RM' as const }
 }
-export function weightFromPct(tm:number,pct:number){ return round2p5(tm*pct) }
+export function weightFromPct(tm: number, pct: number, ){ return round2p5(tm*pct) }
 
 export type PlanRow = { lift: Lift, main:boolean, basePct:number, sets:number, reps:number, focus:string, accessories: string[] }
 
