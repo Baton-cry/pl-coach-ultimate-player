@@ -6,7 +6,7 @@ import { Catalog } from './pages/Catalog'
 import { SettingsPage } from './pages/Settings'
 import { Backup } from './pages/Backup'
 import { Game } from './pages/Game'
-import { Player } from './pages/Player'
+import  Player  from './pages/Player'
 
 export function App({ auth }:{ auth:any }){
   const tabs = ['Сегодня','Плеер','Прогресс','Ранги','Каталог','Настройки','Бэкап']
