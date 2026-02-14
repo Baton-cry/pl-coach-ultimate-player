@@ -241,15 +241,19 @@ export function isoWeekKey(dateISO: string){
   return `${target.getUTCFullYear()}-W${String(week).padStart(2,'0')}`
 }import { importAll } from './db'
 
-export async function syncFromCloud() {
+export async function syncFromCloud(): Promise<boolean> {
   try {
-    const r = await fetch('/api/sync')
+    const r = await fetch(`/api/sync?t=${Date.now()}`, { cache: 'no-store' })
+    if (!r.ok) return false
+
     const text = await r.text()
-    const data = text && text !== 'null' ? JSON.parse(text) : null
+    if (!text || text === 'null') return false   // <-- ВАЖНО
+
+    const data = JSON.parse(text)
     await importAll(data)
     return true
   } catch (e) {
-    console.log('sync pull failed')
+    console.log('sync pull failed', e)
     return false
   }
 }

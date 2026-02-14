@@ -31,6 +31,7 @@ export function Player({ auth }:{ auth:any }){
 
   useEffect(()=>{
     (async()=>{
+      await syncFromCloud()
       setS(await auth.getSettings())
       setCis(await getCheckInsAll())
       setTop(await getTopSetsAll())
