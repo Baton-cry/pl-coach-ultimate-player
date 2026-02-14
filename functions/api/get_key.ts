@@ -9,10 +9,12 @@ export const onRequestGet: PagesFunction = async ({ env }) => {
 
   let data: any = raw;
 
-  try { data = JSON.parse(data); } catch {}
-  if (typeof data === "string") {
+  try {
     data = JSON.parse(data);
-  }
+    if (typeof data === "string") {
+      data = JSON.parse(data);
+    }
+  } catch {}
 
   return new Response(JSON.stringify(data), {
     headers: { "content-type": "application/json" }
