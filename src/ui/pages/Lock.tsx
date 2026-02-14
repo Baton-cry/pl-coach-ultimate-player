@@ -1,79 +1,89 @@
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react";
+import { Btn, Card, Container, Input, Pill, Topbar } from "../components";
 
-export function Lock({ auth }: any) {
+export function Lock({ auth }: { auth: any }) {
+  const [pw, setPw] = useState("");
+  const [pw2, setPw2] = useState("");
+  const [err, setErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
-  const [pw, setPw] = useState("")
-  const [pw2, setPw2] = useState("")
-  const [err, setErr] = useState<string | null>(null)
-  const [busy, setBusy] = useState(false)
-
-  // 👉 реальный статус сети
-  const [online, setOnline] = useState(navigator.onLine)
+  // Онлайн/оффлайн только по состоянию браузера, а не по ошибкам API
+  const [online, setOnline] = useState(() => navigator.onLine);
 
   useEffect(() => {
-    const onUp = () => setOnline(true)
-    const onDown = () => setOnline(false)
+    const onUp = () => setOnline(true);
+    const onDown = () => setOnline(false);
 
-    window.addEventListener("online", onUp)
-    window.addEventListener("offline", onDown)
+    window.addEventListener("online", onUp);
+    window.addEventListener("offline", onDown);
 
     return () => {
-      window.removeEventListener("online", onUp)
-      window.removeEventListener("offline", onDown)
-    }
-  }, [])
+      window.removeEventListener("online", onUp);
+      window.removeEventListener("offline", onDown);
+    };
+  }, []);
 
   async function go() {
-    setErr(null)
+    setErr(null);
 
     if (pw.length < 6) {
-      setErr("Пароль минимум 6 символов")
-      return
+      setErr("Пароль минимум 6 символов");
+      return;
     }
 
-    setBusy(true)
+    setBusy(true);
     try {
-      if (!auth.hasPass) {
+      // Первый запуск — создаём пароль один раз
+      if (!auth.hasPass?.()) {
         if (pw !== pw2) {
-          setErr("Пароли не совпали")
-          return
+          setErr("Пароли не совпали");
+          return;
         }
-        await auth.setPasswordOnce(pw)
+        await auth.setPasswordOnce?.(pw);
+        // если у тебя есть метод “войти/разблокировать” после установки — можно вызывать тут
+        // await auth.unlock?.(pw)
       } else {
-        const ok = await auth.unlock(pw)
-        if (!ok) setErr("Неверный пароль")
+        // Обычная разблокировка
+        const ok = await auth.unlock?.(pw);
+        if (!ok) setErr("Неверный пароль");
       }
+    } catch (e: any) {
+      // НЕ включаем “OFFLINE” по ошибке /api — это чинится в логике sync,
+      // здесь просто показываем текст ошибки
+      setErr(e?.message || "Ошибка");
     } finally {
-      setBusy(false)
+      setBusy(false);
     }
   }
+
+  const hasPass = !!auth.hasPass?.();
 
   return (
     <Container>
       <Topbar
-        title="Вход"
-        subtitle={online ? "Онлайн режим." : "Офлайн. Пароль восстановить нельзя."}
+        title={hasPass ? "Вход" : "Вход"}
+        subtitle="Офлайн. Пароль восстановить нельзя."
         right={!online ? <Pill tone="red">OFFLINE</Pill> : null}
       />
 
       <div className="mt-4 space-y-3">
         <Card
-          title={auth.hasPass ? "Введи пароль" : "Задай пароль (один раз)"}
+          title={hasPass ? "Введи пароль" : "Задай пароль (один раз)"}
           desc="Данные хранятся на устройстве. Перенос между айфоном и ПК — экспорт/импорт файла (в бэкапе)."
         >
           <div className="space-y-2">
             <Input
               type="password"
               value={pw}
-              onChange={(e:any)=>setPw(e.target.value)}
+              onChange={(e) => setPw(e.target.value)}
               placeholder="Пароль"
             />
 
-            {!auth.hasPass && (
+            {!hasPass && (
               <Input
                 type="password"
                 value={pw2}
-                onChange={(e:any)=>setPw2(e.target.value)}
+                onChange={(e) => setPw2(e.target.value)}
                 placeholder="Повтори пароль"
               />
             )}
@@ -81,11 +91,11 @@ export function Lock({ auth }: any) {
             {err && <div className="text-sm text-red">{err}</div>}
 
             <Btn className="w-full" onClick={go} disabled={busy}>
-              {auth.hasPass ? "Войти" : "Создать пароль"}
+              {hasPass ? "Войти" : "Создать пароль"}
             </Btn>
           </div>
         </Card>
       </div>
     </Container>
-  )
+  );
 }
