@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Btn, Card, Container, Input, Pill, Topbar } from '../components'
 import { addTopSet, getCheckInsAll, getTopSetsAll } from '../../core/db'
-import { e1rm, fatigueFlag, intensityMultiplier, isoToday, planFor, trainingMaxForLift, weightFromPct } from '../../core/logic'
+import {syncFromCloud, e1rm, fatigueFlag, intensityMultiplier, isoToday, planFor, trainingMaxForLift, weightFromPct } from '../../core/logic'
 import type { Lift } from '../../core/types'
 
 type PlayerSet = { w:number, reps:number, rpe?:number|null, done:boolean }

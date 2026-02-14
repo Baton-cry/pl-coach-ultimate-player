@@ -239,4 +239,17 @@ export function isoWeekKey(dateISO: string){
   const firstThursday = new Date(Date.UTC(target.getUTCFullYear(),0,4))
   const week = 1 + Math.round(((target.getTime()-firstThursday.getTime())/86400000 - 3 + ((firstThursday.getUTCDay()+6)%7))/7)
   return `${target.getUTCFullYear()}-W${String(week).padStart(2,'0')}`
+}import { importAll } from './db'
+
+export async function syncFromCloud() {
+  try {
+    const r = await fetch('/api/sync')
+    const text = await r.text()
+    const data = text && text !== 'null' ? JSON.parse(text) : null
+    await importAll(data)
+    return true
+  } catch (e) {
+    console.log('sync pull failed')
+    return false
+  }
 }

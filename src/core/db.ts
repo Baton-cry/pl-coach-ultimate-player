@@ -143,3 +143,56 @@ export async function syncToCloud(data: any) {
     console.log('sync offline')
   }
 }
+export async function importAll(payload: any) {
+  if (!payload) return
+
+  const d = await db()
+
+  // settings (singleton)
+  if (payload.settings) {
+    await d.put("settings", { ...(payload.settings as any), key: KEYS.SETTINGS } as any)
+  }
+
+  // checkins (key = dateISO)
+  if (Array.isArray(payload.checkins)) {
+    for (const ci of payload.checkins) {
+      if (!ci?.dateISO) continue
+      await d.put("checkins", { ...(ci as any), key: ci.dateISO } as any)
+    }
+  }
+
+  // topsets (autoIncrement id) — кладём как есть, если есть id
+  if (Array.isArray(payload.topsets)) {
+    for (const ts of payload.topsets) {
+      // если нет id — пропускаем, чтобы не ломать autoIncrement
+      if (ts?.id == null) continue
+      await d.put("topsets", ts as any)
+    }
+  }
+
+  // nutrition (key = dateISO)
+  if (Array.isArray(payload.nutrition)) {
+    for (const n of payload.nutrition) {
+      const k = n?.dateISO
+      if (!k) continue
+      await d.put("nutrition", { ...(n as any), key: k } as any)
+    }
+  }
+
+  // exercises (autoIncrement id) — аналогично: только если есть id
+  if (Array.isArray(payload.exercises)) {
+    for (const ex of payload.exercises) {
+      if (ex?.id == null) continue
+      await d.put("exercises", ex as any)
+    }
+  }
+
+  // meta (key = string)
+  if (Array.isArray(payload.meta)) {
+    for (const m of payload.meta) {
+      const k = m?.key
+      if (!k) continue
+      await d.put("meta", m as any)
+    }
+  }
+}
