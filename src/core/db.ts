@@ -35,13 +35,17 @@ export async function getSettings(): Promise<Settings|null>{
   return (await d.get('settings',KEYS.SETTINGS)) ?? null
 }
 export async function setSettings(s: Settings){
-  const d=await db()
+  const d = await db()
   await d.put('settings',{...s, key:KEYS.SETTINGS} as any)
+
+  await syncToCloud(await exportAll())
 }
 
 export async function upsertCheckIn(ci: CheckIn){
-  const d=await db()
+  const d = await db()
   await d.put('checkins',{...ci, key:ci.dateISO} as any)
+
+  await syncToCloud(await exportAll())
 }
 export async function getCheckInsAll(): Promise<CheckIn[]>{
   const d=await db()
@@ -114,4 +118,28 @@ export async function getGamify(): Promise<any>{
 export async function setGamify(v:any){
   const d=await db()
   await d.put('meta',{ key:'gamify', value:v } as any)
+}
+export async function exportAll() {
+  const d = await db()
+
+  return {
+    settings: await d.get('settings', KEYS.SETTINGS),
+    checkins: await d.getAll('checkins'),
+    topsets: await d.getAll('topsets'),
+    nutrition: await d.getAll('nutrition'),
+    exercises: await d.getAll('exercises'),
+    meta: await d.getAll('meta'),
+    ts: Date.now()
+  }
+}
+export async function syncToCloud(data: any) {
+  try {
+    await fetch('/api/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+  } catch (e) {
+    console.log('sync offline')
+  }
 }
